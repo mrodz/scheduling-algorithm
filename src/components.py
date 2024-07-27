@@ -14,6 +14,7 @@ class Team:
 
 @dataclass
 class PlayableTeamCollection:
+    unique_id: int
     teams: list[Team]
 
 

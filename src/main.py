@@ -67,8 +67,8 @@ FIELD_FIVE = Field(5, list(
     )
 ))
 
-TEAM_GROUP_ONE = PlayableTeamCollection([Team(i) for i in range(1, 6)])
-TEAM_GROUP_TWO = PlayableTeamCollection([Team(i) for i in range(6, 13)])
+TEAM_GROUP_ONE = PlayableTeamCollection(1, [Team(i) for i in range(1, 6)])
+TEAM_GROUP_TWO = PlayableTeamCollection(2, [Team(i) for i in range(6, 13)])
 
 COACH_CONFLICT_ONE = CoachConflict(1, [Team(2), Team(7)])
 COACH_CONFLICT_TWO = CoachConflict(2, [Team(4), Team(9)])
