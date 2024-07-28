@@ -32,19 +32,15 @@ class TimeSlot:
     unique_id: int
     start_time: datetime
     end_time: datetime
-    concurrency: int = 1
 
-    def __init__(self, start_time: datetime, end_time: datetime, concurrency: Optional[int]):
+    def __init__(self, start_time: datetime, end_time: datetime):
         self.unique_id = timeslot_id()
         self.start_time = start_time
         self.end_time = end_time
-        if concurrency is not None:
-            self.concurrency = concurrency
 
     @staticmethod
-    def with_duration(start_time: datetime, *, hours: int, minutes: int = 0,
-                      concurrency: int = 1) -> 'TimeSlot':
-        return TimeSlot(start_time, start_time + timedelta(hours=hours, minutes=minutes), concurrency)
+    def with_duration(start_time: datetime, *, hours: int, minutes: int = 0) -> 'TimeSlot':
+        return TimeSlot(start_time, start_time + timedelta(hours=hours, minutes=minutes))
 
 
 @dataclass
@@ -59,7 +55,6 @@ class TimeSlotGenerator:
     step: timedelta
     break_duration: Union[timedelta, tuple[timedelta, timedelta]]
     limit: int = 0
-    concurrency: int = 1
 
     def __iter__(self):
         return self
@@ -86,7 +81,8 @@ class TimeSlotGenerator:
 
         self.start = end_of_game + delta
 
-        return TimeSlot(start_of_game, end_of_game, self.concurrency)
+        return TimeSlot(start_of_game, end_of_game)
+
 
 @dataclass
 class Booking:
@@ -114,10 +110,12 @@ class ScheduledInput:
     team_groups: list[PlayableTeamCollection]
     fields: list[Field]
     coach_conflicts: list[CoachConflict]
+    games_played_per_team: int
 
     def __init__(self, unique_id: int, *, fields: Optional[list[Field]] = None,
                  coach_conflicts: Optional[list[CoachConflict]] = None,
-                 team_groups: Optional[list[PlayableTeamCollection]] = None):
+                 team_groups: Optional[list[PlayableTeamCollection]] = None,
+                 games_played_per_team: int = 1):
         if team_groups is None:
             team_groups = []
         if coach_conflicts is None:
@@ -129,6 +127,7 @@ class ScheduledInput:
         self.fields = fields
         self.coach_conflicts = coach_conflicts
         self.team_groups = team_groups
+        self.games_played_per_team = games_played_per_team
 
     def with_team_groups(self, team_groups: list[PlayableTeamCollection]) -> 'ScheduledInput':
         self.team_groups = team_groups
@@ -142,6 +141,10 @@ class ScheduledInput:
         self.coach_conflicts = coach_conflicts
         return self
 
+    def with_games_played_per_team(self, games_played_per_team: int) -> 'ScheduledInput':
+        self.games_played_per_team = games_played_per_team
+        return self
+
     def teams(self) -> Generator[Team, None, None]:
         for team_group in self.team_groups:
             for team in team_group.teams:
@@ -151,6 +154,12 @@ class ScheduledInput:
         for field in self.fields:
             for slot in field.time_slots:
                 yield slot
+
+    def teams_len(self) -> int:
+        return sum(len(group.teams) for group in self.team_groups)
+
+    def timeslot_len(self) -> int:
+        return sum(len(field.time_slots) for field in self.fields)
 
 
 @dataclass

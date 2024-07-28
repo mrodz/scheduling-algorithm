@@ -27,7 +27,6 @@ FIELD_THREE = Field(3, list(
         step=timedelta(hours=1),
         break_duration=(timedelta(minutes=15), timedelta(minutes=30)),
         limit=12,
-        concurrency=2,
     )
 ))
 
@@ -37,7 +36,6 @@ FIELD_FOUR = Field(4, list(
         step=timedelta(hours=1),
         break_duration=(timedelta(minutes=15), timedelta(minutes=30)),
         limit=12,
-        concurrency=2,
     )
 ) + list(
     TimeSlotGenerator(
@@ -45,7 +43,6 @@ FIELD_FOUR = Field(4, list(
         step=timedelta(hours=1),
         break_duration=(timedelta(minutes=15), timedelta(minutes=30)),
         limit=14,
-        concurrency=2
     )
 ))
 
@@ -55,7 +52,6 @@ FIELD_FIVE = Field(5, list(
         step=timedelta(hours=1),
         break_duration=(timedelta(minutes=5), timedelta(minutes=30)),
         limit=12,
-        concurrency=2,
     )
 ) + list(
     TimeSlotGenerator(
@@ -63,7 +59,6 @@ FIELD_FIVE = Field(5, list(
         step=timedelta(hours=1),
         break_duration=(timedelta(minutes=5), timedelta(minutes=30)),
         limit=14,
-        concurrency=2
     )
 ))
 
