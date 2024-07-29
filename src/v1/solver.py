@@ -41,6 +41,7 @@ def schedule(schedule_input: ScheduledInput) -> ScheduledOutput:
 
     assignments = {}
     team_to_intervals = collections.defaultdict(list)
+    field_to_intervals = collections.defaultdict(list)
 
     for field in schedule_input.fields:
         for time_slot in field.time_slots:
@@ -50,6 +51,8 @@ def schedule(schedule_input: ScheduledInput) -> ScheduledOutput:
             interval_var = model.new_fixed_size_interval_var(start=start,
                                                              size=end - start,
                                                              name=f"t{time_slot.unique_id}_F{field.unique_id}")
+
+            field_to_intervals[field.unique_id].append(interval_var)
 
             for team_group in schedule_input.team_groups:
                 for team_one, team_two in combinations(team_group.teams, 2):
@@ -108,6 +111,8 @@ def schedule(schedule_input: ScheduledInput) -> ScheduledOutput:
                         elif key_pos_2 in assignments:
                             team_one_games_played += assignments[key_pos_2]
 
+                    model.add_no_overlap(field_to_intervals[field.unique_id])
+
             # FIRST CONSTRAINT: evenly distribute games
             model.add(min_games_per_team <= team_one_games_played)
 
@@ -115,8 +120,29 @@ def schedule(schedule_input: ScheduledInput) -> ScheduledOutput:
 
             # SECOND CONSTRAINT: no overlapping schedules
             # THIS IS BROKEN: see https://stackoverflow.com/a/70494431/17267647
-            model.add_no_overlap(intervals_applied_to_team)
+            # model.add_no_overlap(intervals_applied_to_team)
 
     # TODO
 
-    raise NotImplementedError()
+    solver = cp_model.CpSolver()
+    status = solver.Solve(model)
+
+    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        print("Solution:")
+
+        for field in schedule_input.fields:
+            for time_slot in field.time_slots:
+                for team_group in schedule_input.team_groups:
+                    for team_one, team_two in combinations(team_group.teams, 2):
+                        key = (
+                            field.unique_id,
+                            time_slot.unique_id,
+                            team_group.unique_id,
+                            team_one.unique_id,
+                            team_two.unique_id
+                        )
+
+                        if assignments[key]:
+                            print(f"Game at field {field} ({time_slot}) - {team_one} vs {team_two}")
+    else:
+        print("No solution found.")
